@@ -1,6 +1,20 @@
 FROM java:8
+
+# mount to /tmp
 VOLUME /tmp
-ADD target/demo-0.0.1-SNAPSHOT.jar app.jar
+
+# Install maven
+RUN apt-get update
+RUN apt-get install -y maven
+
+# Prepare by downloading dependencies
+ADD pom.xml /pom.xml
+RUN ["mvn", "dependency:resolve"]
+
+# Adding source, compile and package into a fat jar
+ADD src /src
+RUN ["mvn", "package"]
+
 EXPOSE 8090
 ENV JAVA_OPTS=""
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar" ]
+CMD ["/usr/lib/jvm/java-8-openjdk-amd64/bin/java", "-jar", "target/demo-0.0.1-SNAPSHOT.jar"]
